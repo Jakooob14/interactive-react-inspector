@@ -1,0 +1,8 @@
+playgrounds/
+src/
+tsconfig.json
+tsup.config.ts
+.opencode/
+node_modules/
+.gitignore
+.npmignore

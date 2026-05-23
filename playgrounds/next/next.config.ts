@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import Inspector from "../../packages/unplugin/src"
+import Inspector from "react-inspector"
 
 const nextConfig: NextConfig = {
     webpack(config) {

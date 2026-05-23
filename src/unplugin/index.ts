@@ -3,7 +3,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import launch from "launch-editor";
 
-import { transform as sourceTransform } from "../../core/src/transform";
+import fs from "node:fs";
+
+import { transform as sourceTransform } from "../core/transform.ts";
 
 const VIRTUAL_ID = "virtual:react-inspector";
 const RESOLVED_ID = "\0" + VIRTUAL_ID;
@@ -18,11 +20,11 @@ function normalizeId(id?: string) {
     return cleaned.replace(/\\/g, "/");
 }
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const RUNTIME_PATH = normalizeId(
-    path.resolve(
-        path.dirname(fileURLToPath(import.meta.url)),
-        "../../runtime/src/install.ts",
-    ),
+    fs.existsSync(path.resolve(__dirname, "../runtime/install.ts"))
+        ? path.resolve(__dirname, "../runtime/install.ts")
+        : path.resolve(__dirname, "./runtime.js"),
 );
 
 function hasDirective(code: string, directive: string) {
