@@ -1,11 +1,13 @@
 # react-inspector
 
-React component inspector and source code jump utility.
+React component inspector and source code jump utility. Quickly jump from your browser to your IDE by clicking on React components.
+
+Inspired by [webfansplz/vite-plugin-vue-inspector](https://github.com/webfansplz/vite-plugin-vue-inspector).
 
 ## Features
-- Inspect React components in the browser.
-- Click to jump to the source code in your editor.
-- Supports Vite and Next.js.
+- Inspect React components directly in the browser.
+- Click to jump to the exact source code line in your editor.
+- Cross-framework support for Vite and Next.js.
 
 ## Installation
 
@@ -17,8 +19,9 @@ npm install react-inspector
 
 ### Vite
 
+Add the plugin to your `vite.config.ts`:
+
 ```ts
-// vite.config.ts
 import { defineConfig } from 'vite'
 import Inspector from 'react-inspector'
 
@@ -29,17 +32,14 @@ export default defineConfig({
 })
 ```
 
-```tsx
-// main.tsx
-import { installInspector } from 'react-inspector/runtime'
-
-installInspector()
-```
-
 ### Next.js
 
+> IMPORTANT]
+> `react-inspector` currently requires **Webpack**. It is not compatible with Turbopack yet. Ensure you run your dev server with the `--webpack` flag or have it enabled in your config.
+
+1. Add the plugin to your `next.config.ts`:
+
 ```ts
-// next.config.ts
 import Inspector from 'react-inspector'
 
 const nextConfig = {
@@ -54,5 +54,12 @@ const nextConfig = {
 export default nextConfig
 ```
 
+2. Run Next.js with Webpack:
+
+```bash
+next dev --webpack
+```
+
 ## License
-ISC
+MIT
+
