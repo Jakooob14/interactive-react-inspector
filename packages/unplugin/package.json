@@ -1,0 +1,20 @@
+{
+  "name": "unplugin",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@babel/parser": "^7.29.3",
+    "@babel/traverse": "^7.29.0",
+    "launch-editor": "^2.13.2",
+    "magic-string": "^0.30.21",
+    "unplugin": "^3.0.0"
+  }
+}
