@@ -1,4 +1,4 @@
-# react-inspector
+# interactive-react-inspector
 
 React component inspector and source code jump utility. Quickly jump from your browser to your IDE by clicking on React components.
 
@@ -12,7 +12,7 @@ Inspired by [webfansplz/vite-plugin-vue-inspector](https://github.com/webfansplz
 ## Installation
 
 ```bash
-npm install react-inspector
+npm install interactive-react-inspector
 ```
 
 ## Usage
@@ -23,7 +23,7 @@ Add the plugin to your `vite.config.ts`:
 
 ```ts
 import { defineConfig } from 'vite'
-import Inspector from 'react-inspector'
+import Inspector from 'interactive-react-inspector'
 
 export default defineConfig({
   plugins: [
@@ -35,12 +35,12 @@ export default defineConfig({
 ### Next.js
 
 > IMPORTANT]
-> `react-inspector` currently requires **Webpack**. It is not compatible with Turbopack yet. Ensure you run your dev server with the `--webpack` flag or have it enabled in your config.
+> `interactive-react-inspector` currently requires **Webpack**. It is not compatible with Turbopack yet. Ensure you run your dev server with the `--webpack` flag or have it enabled in your config.
 
 1. Add the plugin to your `next.config.ts`:
 
 ```ts
-import Inspector from 'react-inspector'
+import Inspector from 'interactive-react-inspector'
 
 const nextConfig = {
   webpack(config) {

@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import Inspector from "react-inspector"
+import Inspector from "interactive-react-inspector"
 
 // https://vite.dev/config/
 export default defineConfig({
