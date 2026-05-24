@@ -199,7 +199,11 @@ function renderHighlight(target) {
 }
 
 export function installInspector() {
-    if (installed || typeof document === "undefined") return;
+    if (
+        installed ||
+        typeof document === "undefined" ||
+        process.env.NODE_ENV === "production"
+    ) return;
     console.log("[react-inspector] installing");
     
     installed = true

@@ -317,9 +317,16 @@ function createTurbopackRules(existingRules: Record<string, any> = {}) {
     return rules;
 }
 
-const Inspector = createUnplugin((_options, meta) => ({
-    name: "react-inspector",
-    enforce: "pre",
+const Inspector = createUnplugin((_options, meta) => {
+    if (process.env.NODE_ENV === "production") {
+        return {
+            name: "react-inspector",
+        };
+    }
+
+    return {
+        name: "react-inspector",
+        enforce: "pre",
 
     resolveId(id) {
         if (id === VIRTUAL_ID) {
@@ -358,9 +365,14 @@ import ${JSON.stringify(getRuntimeImport(meta))};
         injectWebpackEntry(compiler, getRuntimeImport(meta));
         injectWebpackDevServerOpenRoute(compiler);
     },
-}));
+    };
+});
 
 function next<TConfig extends NextConfigLike>(config: TConfig = {} as TConfig) {
+    if (process.env.NODE_ENV === "production") {
+        return config;
+    }
+
     const originalWebpack = config.webpack;
 
     return {
