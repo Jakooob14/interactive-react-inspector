@@ -19,7 +19,9 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "pretest:e2e": "pnpm build",
+    "test": "pnpm test:e2e",
+    "test:e2e": "playwright test"
   },
   "keywords": [
     "react",
@@ -38,6 +40,7 @@
     "unplugin": "^3.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/babel__traverse": "^7.28.0",
     "@types/node": "^20.19.41",
     "tsup": "^8.3.5",
