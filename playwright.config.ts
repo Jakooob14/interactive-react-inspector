@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+import { playgrounds } from "./tests/e2e/playgrounds";
+
 export default defineConfig({
     testDir: "./tests/e2e",
     fullyParallel: true,
@@ -7,20 +9,21 @@ export default defineConfig({
     retries: process.env.CI ? 2 : 0,
     reporter: process.env.CI ? "github" : "list",
     use: {
-        baseURL: "http://127.0.0.1:5173",
         trace: "on-first-retry",
     },
-    webServer: {
-        command: "pnpm dev --host 127.0.0.1 --port 5173",
-        cwd: "./playgrounds/vite-react",
-        url: "http://127.0.0.1:5173",
+    webServer: playgrounds.map((playground) => ({
+        command: playground.command,
+        cwd: playground.cwd,
+        url: playground.url,
         reuseExistingServer: false,
         timeout: 120_000,
-    },
-    projects: [
-        {
-            name: "chromium",
-            use: { ...devices["Desktop Chrome"] },
+    })),
+    projects: playgrounds.map((playground) => ({
+        name: playground.name,
+        metadata: { playground },
+        use: {
+            ...devices["Desktop Chrome"],
+            baseURL: playground.url,
         },
-    ],
+    })),
 });
