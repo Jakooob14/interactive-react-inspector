@@ -1,6 +1,6 @@
 {
   "name": "interactive-react-inspector",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "React component inspector and source code jump utility",
   "author": "Jakub Sokol",
   "license": "MIT",
