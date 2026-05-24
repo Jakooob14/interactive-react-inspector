@@ -5,6 +5,7 @@ import launch from "launch-editor";
 
 import fs from "node:fs";
 
+import { injectSideEffectImport } from "../core/imports.ts";
 import { transform as sourceTransform } from "../core/transform.ts";
 
 const VIRTUAL_ID = "virtual:react-inspector";
@@ -20,7 +21,10 @@ function normalizeId(id?: string) {
     return cleaned.replace(/\\/g, "/");
 }
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const currentFile = typeof __filename === "string"
+    ? __filename
+    : fileURLToPath(import.meta.url);
+const __dirname = path.dirname(currentFile);
 const RUNTIME_PATH = normalizeId(
     fs.existsSync(path.resolve(__dirname, "../runtime/install.ts"))
         ? path.resolve(__dirname, "../runtime/install.ts")
@@ -226,7 +230,55 @@ function injectWebpackDevServerOpenRoute(compiler: { options: { devServer?: any 
     };
 }
 
-export default createUnplugin((_options, meta) => ({
+type NextConfigLike = Record<string, any> & {
+    turbopack?: Record<string, any> & {
+        rules?: Record<string, any>;
+    };
+    webpack?: ((config: any, context: any) => any) | null;
+};
+
+const TURBOPACK_EXTENSIONS = ["*.mjs", "*.js", "*.jsx", "*.ts", "*.tsx"];
+const TURBOPACK_LOADER = "interactive-react-inspector/loader";
+
+function appendTurbopackRule(existing: unknown, rule: unknown) {
+    return Array.isArray(existing)
+        ? [...existing, rule]
+        : existing
+            ? [existing, rule]
+            : rule;
+}
+
+function getTurbopackCondition(extension: string) {
+    if (extension !== "*.js") return { not: "foreign" };
+
+    return {
+        all: [
+            { not: "foreign" },
+            { path: /\.js$/ },
+            { not: { path: /\.(?:jsx|ts|tsx)\.js$/ } },
+        ],
+    };
+}
+
+function createTurbopackRules(existingRules: Record<string, any> = {}) {
+    const rules = { ...existingRules };
+
+    for (const extension of TURBOPACK_EXTENSIONS) {
+        rules[extension] = appendTurbopackRule(rules[extension], {
+            condition: getTurbopackCondition(extension),
+            loaders: [
+                {
+                    loader: TURBOPACK_LOADER,
+                    options: { runtime: true },
+                },
+            ],
+        });
+    }
+
+    return rules;
+}
+
+const Inspector = createUnplugin((_options, meta) => ({
     name: "react-inspector",
     enforce: "pre",
 
@@ -251,9 +303,7 @@ import ${JSON.stringify(getRuntimeImport(meta))};
         let result = sourceTransform(code, id);
 
         if (shouldInjectRuntime(id, code, meta.framework) && result) {
-            result.code =
-                `import "${VIRTUAL_ID}";\n` +
-                result.code;
+            result.code = injectSideEffectImport(result.code, VIRTUAL_ID);
         }
 
         return result;
@@ -270,3 +320,29 @@ import ${JSON.stringify(getRuntimeImport(meta))};
         injectWebpackDevServerOpenRoute(compiler);
     },
 }));
+
+function next<TConfig extends NextConfigLike>(config: TConfig = {} as TConfig) {
+    const originalWebpack = config.webpack;
+
+    return {
+        ...config,
+        turbopack: {
+            ...config.turbopack,
+            rules: createTurbopackRules(config.turbopack?.rules),
+        },
+        webpack(webpackConfig: any, context: any) {
+            const nextWebpackConfig = typeof originalWebpack === "function"
+                ? originalWebpack(webpackConfig, context) ?? webpackConfig
+                : webpackConfig;
+
+            nextWebpackConfig.plugins ??= [];
+            nextWebpackConfig.plugins.push(Inspector.webpack());
+
+            return nextWebpackConfig;
+        },
+    };
+}
+
+export { next };
+
+export default Object.assign(Inspector, { next });

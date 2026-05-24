@@ -4,6 +4,7 @@ export default defineConfig({
   entry: {
     index: 'src/unplugin/index.ts',
     vite: 'src/unplugin/index.ts',
+    loader: 'src/loader.ts',
     runtime: 'src/runtime/install.ts',
   },
   format: ['cjs', 'esm'],

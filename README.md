@@ -34,32 +34,26 @@ export default defineConfig({
 
 ### Next.js
 
-> IMPORTANT]
-> `interactive-react-inspector` currently requires **Webpack**. It is not compatible with Turbopack yet. Ensure you run your dev server with the `--webpack` flag or have it enabled in your config.
-
-1. Add the plugin to your `next.config.ts`:
+Add the Next.js integration to your `next.config.ts`:
 
 ```ts
 import Inspector from 'interactive-react-inspector'
 
-const nextConfig = {
-  webpack(config) {
-    config.plugins.push(
-      Inspector.webpack(),
-    )
-    return config
-  },
-}
+const nextConfig = {}
 
-export default nextConfig
+export default Inspector.next(nextConfig)
 ```
 
-2. Run Next.js with Webpack:
+This configures Turbopack rules for `next dev --turbopack` and `next build --turbopack`, while keeping Webpack support for projects that still run `next dev --webpack`.
+
+The inspector instruments development builds only. Production Next.js builds are supported and complete without inspector metadata being added.
+
+You can try the Turbopack playground in this repository:
 
 ```bash
-next dev --webpack
+pnpm --dir playgrounds/next-turbopack dev
+pnpm --dir playgrounds/next-turbopack build
 ```
 
 ## License
 MIT
-
