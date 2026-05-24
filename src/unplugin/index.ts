@@ -2,6 +2,8 @@ import { createUnplugin } from "unplugin";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import launch from "launch-editor";
+import http from "node:http";
+import type { AddressInfo } from "node:net";
 
 import fs from "node:fs";
 
@@ -214,6 +216,42 @@ function installOpenMiddleware(app: any) {
     );
 }
 
+let bridgePortPromise: Promise<number> | null = null;
+
+function getBridgeServerPort() {
+    if (bridgePortPromise) return bridgePortPromise;
+
+    bridgePortPromise = new Promise((resolve) => {
+        const server = http.createServer((req, res) => {
+            if (req.url === "/__open" && req.method === "POST") {
+                let body = "";
+                req.on("data", (chunk) => (body += chunk));
+                req.on("end", () => {
+                    try {
+                        const { file, line, column } = JSON.parse(body);
+                        launch(`${file}:${line}:${column}`);
+                        res.statusCode = 204;
+                        res.end();
+                    } catch {
+                        res.statusCode = 400;
+                        res.end();
+                    }
+                });
+            } else {
+                res.statusCode = 404;
+                res.end();
+            }
+        });
+
+        server.listen(0, "127.0.0.1", () => {
+            const port = (server.address() as AddressInfo).port;
+            resolve(port);
+        });
+    });
+
+    return bridgePortPromise;
+}
+
 function injectWebpackDevServerOpenRoute(compiler: { options: { devServer?: any } }) {
     const devServer = compiler.options.devServer;
 
@@ -235,6 +273,7 @@ type NextConfigLike = Record<string, any> & {
         rules?: Record<string, any>;
     };
     webpack?: ((config: any, context: any) => any) | null;
+    rewrites?: (() => Promise<any> | any) | any;
 };
 
 const TURBOPACK_EXTENSIONS = ["*.mjs", "*.js", "*.jsx", "*.ts", "*.tsx"];
@@ -329,6 +368,28 @@ function next<TConfig extends NextConfigLike>(config: TConfig = {} as TConfig) {
         turbopack: {
             ...config.turbopack,
             rules: createTurbopackRules(config.turbopack?.rules),
+        },
+        async rewrites() {
+            const bridgePort = await getBridgeServerPort();
+            const originalRewrites = typeof config.rewrites === "function"
+                ? await config.rewrites()
+                : config.rewrites;
+
+            const inspectorRewrite = {
+                source: "/__open",
+                destination: `http://127.0.0.1:${bridgePort}/__open`,
+            };
+
+            if (Array.isArray(originalRewrites)) {
+                return [...originalRewrites, inspectorRewrite];
+            } else if (originalRewrites && typeof originalRewrites === "object") {
+                return {
+                    ...originalRewrites,
+                    fallback: [...(originalRewrites.fallback || []), inspectorRewrite],
+                };
+            }
+
+            return [inspectorRewrite];
         },
         webpack(webpackConfig: any, context: any) {
             const nextWebpackConfig = typeof originalWebpack === "function"

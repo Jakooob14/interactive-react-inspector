@@ -11,13 +11,20 @@ export default defineConfig({
     use: {
         trace: "on-first-retry",
     },
-    webServer: playgrounds.map((playground) => ({
-        command: playground.command,
-        cwd: playground.cwd,
-        url: playground.url,
-        reuseExistingServer: false,
-        timeout: 120_000,
-    })),
+    webServer: Array.from(
+        new Map(
+            playgrounds.map((p) => [
+                p.cwd,
+                {
+                    command: p.command,
+                    cwd: p.cwd,
+                    url: p.url,
+                    reuseExistingServer: !process.env.CI,
+                    timeout: 120_000,
+                },
+            ]),
+        ).values(),
+    ),
     projects: playgrounds.map((playground) => ({
         name: playground.name,
         metadata: { playground },

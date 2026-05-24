@@ -28,24 +28,13 @@ function parseSource(value) {
 async function openSource(source) {
     if (!source) return;
 
-    const viteResponse = await fetch("/__open", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(source),
+    await fetch("/__open", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
         },
-    );
-
-    if (viteResponse.ok) return;
-
-    const params = new URLSearchParams({
-        file: source.file,
-        line1: String(source.line),
-        column1: String(source.column),
+        body: JSON.stringify(source),
     });
-
-    await fetch(`/__nextjs_launch-editor?${params}`);
 }
 
 let installed = false

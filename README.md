@@ -7,7 +7,7 @@ Inspired by [webfansplz/vite-plugin-vue-inspector](https://github.com/webfansplz
 ## Features
 - Inspect React components directly in the browser.
 - Click to jump to the exact source code line in your editor.
-- Cross-framework support for Vite and Next.js.
+- Cross-framework support for Vite and Next.js (Webpack & Turbopack).
 
 ## Installation
 
@@ -57,3 +57,6 @@ pnpm --dir playgrounds/next-turbopack build
 
 ## License
 MIT
+
+## Disclaimer
+This project was created with the help of AI. Contributions and feedback are welcome to improve the project further.

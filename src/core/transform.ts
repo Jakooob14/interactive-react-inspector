@@ -16,8 +16,10 @@ function shouldTransform(id: string) {
     return /\.(mjs|js|jsx|ts|tsx)$/.test(normalizeId(id));
 }
 
-function isHostElementName(name: any) {
-    return name.type === "JSXIdentifier" && /^[a-z]/.test(name.name);
+function isInspectableElement(name: any) {
+    if (name.type !== "JSXIdentifier") return false;
+    const nameStr = name.name;
+    return /^[a-z]/.test(nameStr) || nameStr === "Image" || nameStr === "Link";
 }
 
 export function transform(code: string, id: string) {
@@ -58,7 +60,7 @@ export function transform(code: string, id: string) {
             const node = p.node;
 
             if (!node.loc) return;
-            if (!isHostElementName(node.name)) return;
+            if (!isInspectableElement(node.name)) return;
 
             const exists = node.attributes.some(
                 (a: { type: string; name: { name: string; }; }) =>

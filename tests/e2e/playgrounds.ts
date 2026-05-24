@@ -56,4 +56,32 @@ export const playgrounds: Playground[] = [
             column: 4,
         },
     },
+    {
+        name: "next turbopack special 1",
+        command: "pnpm exec next dev --turbopack --hostname 127.0.0.1 --port 3002",
+        cwd: "./playgrounds/next-turbopack",
+        url: "http://127.0.0.1:3002",
+        readyText: "To get started, edit the page.tsx file.",
+        targetRole: "button",
+        targetName: "Special target 1",
+        expectedRequest: {
+            file: "app/(test)/special-target.tsx",
+            line: 5,
+            column: 8,
+        },
+    },
+    {
+        name: "next turbopack special 2",
+        command: "pnpm exec next dev --turbopack --hostname 127.0.0.1 --port 3002",
+        cwd: "./playgrounds/next-turbopack",
+        url: "http://127.0.0.1:3002",
+        readyText: "To get started, edit the page.tsx file.",
+        targetRole: "button",
+        targetName: "Special target 2",
+        expectedRequest: {
+            file: "app/[test]/special-target-2.tsx",
+            line: 5,
+            column: 8,
+        },
+    },
 ];
