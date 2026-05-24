@@ -78,6 +78,7 @@ function createOverlay() {
             padding: 0 12px;
             outline: none;
             transition: background-color 100ms ease-in-out;
+            touch-action: none;
         }
         
         button:hover {
@@ -107,7 +108,103 @@ function createOverlay() {
     toggleButton.type = "button";
     toggleButton.textContent = "Select";
     toggleButton.setAttribute("aria-pressed", "false");
-    toggleButton.addEventListener("click", () => setSelectMode(!selectMode));
+
+    const savedPos = localStorage.getItem("__react_inspector_pos__");
+    if (savedPos) {
+        try {
+            const pos = JSON.parse(savedPos);
+            root.style.top = "auto";
+            root.style.bottom = "auto";
+            root.style.left = "auto";
+            root.style.right = "auto";
+            
+            if (pos.verticalSide === "bottom") {
+                root.style.bottom = pos.verticalValue;
+            } else {
+                root.style.top = pos.verticalValue;
+            }
+
+            if (pos.horizontalSide === "right") {
+                root.style.right = pos.horizontalValue;
+            } else {
+                root.style.left = pos.horizontalValue;
+            }
+        } catch (e) { }
+    }
+
+    let isDragging = false;
+    toggleButton.addEventListener("pointerdown", (e) => {
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const rect = root.getBoundingClientRect();
+        const initialTop = rect.top;
+        const initialLeft = rect.left;
+        isDragging = false;
+
+        const onPointerMove = (moveEvent) => {
+            const dx = moveEvent.clientX - startX;
+            const dy = moveEvent.clientY - startY;
+            if (!isDragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+                isDragging = true;
+            }
+            if (isDragging) {
+                const newTop = initialTop + dy;
+                const newLeft = initialLeft + dx;
+                
+                const padding = 8;
+                const maxTop = window.innerHeight - rect.height - padding;
+                const maxLeft = window.innerWidth - rect.width - padding;
+
+                root.style.top = `${Math.max(padding, Math.min(newTop, maxTop))}px`;
+                root.style.left = `${Math.max(padding, Math.min(newLeft, maxLeft))}px`;
+                root.style.bottom = "auto";
+                root.style.right = "auto";
+            }
+        };
+
+        const onPointerUp = () => {
+            if (isDragging) {
+                const rect = root.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+
+                const horizontalSide = centerX > window.innerWidth / 2 ? "right" : "left";
+                const verticalSide = centerY > window.innerHeight / 2 ? "bottom" : "top";
+
+                const horizontalValue = horizontalSide === "right" 
+                    ? `${window.innerWidth - rect.right}px` 
+                    : `${rect.left}px`;
+                
+                const verticalValue = verticalSide === "bottom" 
+                    ? `${window.innerHeight - rect.bottom}px` 
+                    : `${rect.top}px`;
+
+                localStorage.setItem("__react_inspector_pos__", JSON.stringify({
+                    horizontalSide,
+                    horizontalValue,
+                    verticalSide,
+                    verticalValue
+                }));
+
+                // Apply the side-based styles immediately
+                root.style.top = verticalSide === "top" ? verticalValue : "auto";
+                root.style.bottom = verticalSide === "bottom" ? verticalValue : "auto";
+                root.style.left = horizontalSide === "left" ? horizontalValue : "auto";
+                root.style.right = horizontalSide === "right" ? horizontalValue : "auto";
+            }
+            window.removeEventListener("pointermove", onPointerMove);
+            window.removeEventListener("pointerup", onPointerUp);
+        };
+
+        window.addEventListener("pointermove", onPointerMove);
+        window.addEventListener("pointerup", onPointerUp);
+    });
+
+    toggleButton.addEventListener("click", () => {
+        if (!isDragging) {
+            setSelectMode(!selectMode);
+        }
+    });
 
     shadow.append(style, toggleButton);
     document.documentElement.appendChild(root);
@@ -151,7 +248,7 @@ function setSelectMode(next) {
         toggleButton.setAttribute("aria-pressed", String(selectMode));
     }
 
-    document.documentElement.style.cursor = selectMode ? "crosshair" : "";
+    document.documentElement.style.cursor = selectMode ? "crosshair !important" : "";
 
     if (!selectMode) {
         activeTarget = null;
@@ -226,6 +323,21 @@ export function installInspector() {
     }, true);
 
     window.addEventListener("resize", () => {
+        if (root) {
+            const rect = root.getBoundingClientRect();
+            const padding = 8;
+            
+            // Just ensure it stays on screen if the side it's pinned to is pushed
+            const currentTop = parseFloat(root.style.top);
+            const currentBottom = parseFloat(root.style.bottom);
+            const currentLeft = parseFloat(root.style.left);
+            const currentRight = parseFloat(root.style.right);
+
+            if (!isNaN(currentTop)) root.style.top = `${Math.max(padding, Math.min(currentTop, window.innerHeight - rect.height - padding))}px`;
+            if (!isNaN(currentBottom)) root.style.bottom = `${Math.max(padding, Math.min(currentBottom, window.innerHeight - rect.height - padding))}px`;
+            if (!isNaN(currentLeft)) root.style.left = `${Math.max(padding, Math.min(currentLeft, window.innerWidth - rect.width - padding))}px`;
+            if (!isNaN(currentRight)) root.style.right = `${Math.max(padding, Math.min(currentRight, window.innerWidth - rect.width - padding))}px`;
+        }
         if (!selectMode || !(activeTarget instanceof Element)) return;
         renderHighlight(activeTarget);
     });
